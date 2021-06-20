@@ -1,0 +1,36 @@
+{{template "base" .}}
+{{define "title"}}Create a new snippet{{end}}
+
+{{define "main"}}
+<form action="/snippet/create" method="post">
+  {{with .Form}}
+  <div>
+    <label for="title">Title</label>
+    {{with .Errors.Get "title"}}
+    <label class='error'>{{.}}</label>
+    {{end}}
+    <input type="text" name="title" id="title" value='{{.Get "title"}}'>
+  </div>
+  <div>
+    <label for="content">Content</label>
+    {{with .Errors.Get "content"}}
+    <label class='error'>{{.}}</label>
+    {{end}}
+    <textarea name="content" id="content" cols="30" rows="10">{{.Get "content"}}</textarea>
+  </div>
+  <div>
+    <label>Delete in</label>
+    {{with .Errors.Get "expires"}}
+    <label class='error'>{{.}}</label>
+    {{end}}
+    {{$exp := or (.Get "expires") "365"}}
+    <input type="radio" name="expires" value=365 {{if (eq $exp "365" )}}checked{{end}}>&nbsp;One Year
+    <input type="radio" name="expires" value=7 {{if (eq $exp "7" )}}checked{{end}}>&nbsp;One Week
+    <input type="radio" name="expires" value=1 {{if (eq $exp "1" )}}checked{{end}}>&nbsp;One Day
+  </div>
+  <div>
+    <button type="submit">Publish a snippet</button>
+  </div>
+  {{end}}
+</form>
+{{end}}
