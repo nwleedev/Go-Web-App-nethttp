@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/justinas/nosurf"
+	"github.com/quavious/golang-net-http-server/pkg/models"
 )
 
 func (app *App) recoverPanic(next http.Handler) http.Handler {
@@ -31,4 +36,47 @@ func secureHeaders(next http.Handler) http.Handler {
 		next.ServeHTTP(rw, r)
 	}
 	return http.HandlerFunc(fn)
+}
+
+func (app *App) requiredAuthentication(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		if app.isAuthenticated(r) {
+			http.Redirect(rw, r, "/user/login", http.StatusSeeOther)
+			return
+		}
+		rw.Header().Add("Cache-Control", "no-store")
+		next.ServeHTTP(rw, r)
+	})
+}
+
+func noSurf(next http.Handler) http.Handler {
+	csrfHandler := nosurf.New(next)
+	csrfHandler.SetBaseCookie(http.Cookie{
+		HttpOnly: true,
+		Path:     "/",
+		Secure:   true,
+	})
+	return csrfHandler
+}
+
+func (app *App) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		exists := app.session.Exists(r, "authenticatedUserID")
+		if !exists {
+			next.ServeHTTP(rw, r)
+			return
+		}
+
+		user, err := app.users.Get(app.session.GetInt(r, "authenticatedUserID"))
+		if errors.Is(err, models.ErrNoRecord) || !user.Active {
+			app.session.Remove(r, "authenticatedUserID")
+			next.ServeHTTP(rw, r)
+			return
+		} else if err != nil {
+			app.serverError(rw, err)
+		}
+
+		ctx := context.WithValue(r.Context(), contextKeyIsAuthenticated, true)
+		next.ServeHTTP(rw, r.WithContext(ctx))
+	})
 }

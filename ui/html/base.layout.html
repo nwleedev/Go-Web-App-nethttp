@@ -27,14 +27,19 @@
     <nav>
       <div>
         <a href="/">Home</a>
+        {{if .IsAuthenticated}}
         <a href="/snippet/create">Create Snippet</a>
+        {{end}}
       </div>
       <div>
         <a href="/user/signup">Signup</a>
         <a href="/user/login">Login</a>
+        {{if .IsAuthenticated}}
         <form action="/user/logout" method="post">
+          <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
           <button type="submit">Logout</button>
         </form>
+        {{end}}
       </div>
     </nav>
   </header>

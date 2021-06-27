@@ -1,0 +1,26 @@
+{{template "base" .}}
+
+{{define "title"}}Login{{end}}
+
+{{define "main"}}
+<form action="/user/login" method="post">
+  <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+  {{with .Form}}
+  {{with .Errors.Get "generic"}}
+  <div class="error">{{.}}</div>
+  {{end}}
+  <div>
+    <label for="email">Email :</label>
+    <input type="email" name="email" id="email" value='{{.Get "email" }}' />
+  </div>
+  <div>
+    <label for="password">Password :</label>
+    <input type="password" name="password" id="password" />
+  </div>
+  <div>
+    <button type="submit">Login</button>
+  </div>
+  </div>
+  {{end}}
+</form>
+{{end}}

@@ -16,6 +16,10 @@ import (
 	"github.com/quavious/golang-net-http-server/pkg/models/mysql"
 )
 
+type contextKey string
+
+const contextKeyIsAuthenticated = contextKey("isAuthenticated")
+
 type App struct {
 	errorLog      *log.Logger
 	infoLog       *log.Logger
@@ -57,6 +61,8 @@ func main() {
 
 	session := sessions.New([]byte(secretKey))
 	session.Lifetime = 12 * time.Hour
+	session.Secure = true
+	session.SameSite = http.SameSiteStrictMode
 
 	app := &App{
 		infoLog:       infoLog,
